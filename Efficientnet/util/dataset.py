@@ -35,16 +35,21 @@ def display_random_images(dataset: torch.utils.data.dataset.Dataset,
         plt.title(title)
 
 class CustomImageDataset(torch.utils.data.dataset.Dataset):
-  def __init__(self, annotations_file: str, img_dir: str,attribs:List,
+  def __init__(self, img_dir: str,attribs:List,
                item_2_label_lst:List,label_2_item_lst:List,
+               annotations_file: str = None,
+               annotations_df: pd.DataFrame = None,
                device:torch.device ='cpu', transform=None):
-    self.label_df = pd.read_csv(annotations_file)
     self.img_dir = img_dir
     self.transform = transform
     self.attribs = attribs
     self.item_2_label_lst = item_2_label_lst
     self.label_2_item_lst = label_2_item_lst
     self.device = device
+    if annotations_file:
+      self.label_df = pd.read_csv(annotations_file)
+    if annotations_df is not None:
+      self.label_df = annotations_df.copy()
 
   def __len__(self):
     return len(self.label_df)
@@ -53,8 +58,7 @@ class CustomImageDataset(torch.utils.data.dataset.Dataset):
     image = self.load_image(index)
     label_val = list(self.label_df.loc[index, self.attribs])
     if self.transform:
-      image = self.transform(image)
-    image = image.cpu()
+      image = self.transform(image).cpu()
     ecd_labels = self.encode_labels_onehot(label_val)
     return image,ecd_labels
 
