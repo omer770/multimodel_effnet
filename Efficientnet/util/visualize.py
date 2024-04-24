@@ -13,8 +13,8 @@ def plot_loss_curves(results: Dict[str, List[float]]):
     """
     
     # Get the loss values of the results dictionary (training and test)
-    loss = [x.detach().numpy() for x in results['train_loss']]
-    test_loss = [x.detach().numpy() for x in results['test_loss']]
+    loss = [x.detach().cpu().numpy() for x in results['train_loss']]
+    test_loss = [x.detach().cpu().numpy() for x in results['test_loss']]
 
     # Get the accuracy values of the results dictionary (training and test)
     accuracy = results['train_acc']
