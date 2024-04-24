@@ -1,7 +1,28 @@
 import torch
 from tqdm import tqdm
+from pathlib import Path
 from typing  import  Tuple, Dict, List
 from IPython.display import clear_output
+device  = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+weights_Dir = Path('/content/drive/MyDrive/Colab_zip/multimodel_effnet/weights')
+weights_Dir.mkdir(parents=True, exist_ok=True)
+
+
+'''
+filePaths = [file for file in weights_Dir.iterdir() if file.name.startswith('me_model_weights')]
+try:
+  latest_weigths = str(filePaths[-1])
+  #model.load_state_dict(torch.load(latest_weigths,map_location= device))
+  print("choosen weights: ",latest_weigths)
+  times = str(int(latest_weigths.split('_')[-2])+1).zfill(2)
+except:
+  latest_weigths= None
+  print("choosen weights: ",latest_weigths)
+  times = '00'
+'''
+# Dataset paths
+#images_files=sorted(os.listdir("data/images"))
 
 def train_step(model: torch.nn.Module,
                dataloader: torch.utils.data.DataLoader,
@@ -100,7 +121,10 @@ def train(model: torch.nn.Module,
           loss_fn: torch.nn.Module,
           acc_fn: torch.nn.Module,
           epochs: int,
-          device: torch.device) -> Dict[str, List]:
+          save_path:str,
+          device: torch.device,
+          latest_weigths:str = None,
+          save_epoch:int=5) -> Dict[str, List]:
 
     # Create empty results dictionary
     results = {"train_loss": [],
@@ -108,7 +132,13 @@ def train(model: torch.nn.Module,
                "test_loss": [],
                "test_acc": []
     }
-
+    if latest_weigths:
+      print("choosen weights: ",latest_weigths)
+      times = str(int(latest_weigths.split('_')[-2])+1).zfill(2)
+      model.load_state_dict(torch.load(latest_weigths,map_location= device))
+    else:
+      print("choosen weights: ",latest_weigths)
+      times = '00'
     # Make sure model on target device
     model.to(device)
 
@@ -140,6 +170,9 @@ def train(model: torch.nn.Module,
         results["train_acc"].append(train_acc)
         results["test_loss"].append(test_loss)
         results["test_acc"].append(test_acc)
-
+        if (epoch%save_epoch)==0:
+            # Save the model's weights after each epoch
+            torch.save(model.state_dict(), f"{save_path}_{times}_{str(epoch).zfill(3)}.pth")
+            print(f"Model weights saved to {save_path}_{times}_{str(epoch).zfill(3)}.pth")
     # Return the filled results at the end of the epochs
     return results
