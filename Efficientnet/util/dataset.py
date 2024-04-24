@@ -53,15 +53,17 @@ class CustomImageDataset(torch.utils.data.dataset.Dataset):
     image = self.load_image(index)
     label_val = list(self.label_df.loc[index, self.attribs])
     if self.transform:
-      image = self.transform(image).cpu()
+      image = self.transform(image)
+    image = image.cpu()
     ecd_labels = self.encode_labels_onehot(label_val)
     return image,ecd_labels
 
   def load_image(self, index: int) -> Image.Image:
       "Opens an image via a path and returns it."
       image_path = os.path.join(self.img_dir, self.label_df.loc[index, 'Image_ID'])
-      img = cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB)
-      return Image.fromarray(img)
+      #img = cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB)
+      #Image.fromarray(img)
+      return Image.open(image_path).convert("RGB")
 
   def encode_labels_onehot(self,labels):
     """Encodes labels as one-hot vectors using PyTorch tensors.
