@@ -40,4 +40,5 @@ def plot_loss_curves(results: Dict[str, List[float]]):
     plt.plot(epochs, test_accuracy, label='test_accuracy')
     plt.title('Accuracy')
     plt.xlabel('Epochs')
-    plt.legend();
+    plt.legend()
+    plt.savefig("results/loss_curves.png");
