@@ -172,7 +172,7 @@ def train(model: torch.nn.Module,
         results["test_acc"].append(test_acc)
         if (epoch%save_epoch)==0:
             # Save the model's weights after each epoch
-            torch.save(model.state_dict(), f"{save_path}_{times}_{str(epoch).zfill(3)}.pth")
-            print(f"Model weights saved to {save_path}_{times}_{str(epoch).zfill(3)}.pth")
+            torch.save(model.state_dict(), f"{str(save_path)}/me_model_weights_{times}_{str(epoch).zfill(3)}.pth")
+            print(f"Model weights saved to {str(save_path)}/me_model_weights_{times}_{str(epoch).zfill(3)}.pth")
     # Return the filled results at the end of the epochs
     return results
