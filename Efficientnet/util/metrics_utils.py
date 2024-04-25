@@ -4,6 +4,21 @@ from pprint import pprint
 from torchmetrics import ConfusionMatrix
 from mlxtend.plotting import plot_confusion_matrix
 
+attribs_m = ['Roof Condition', 'Roof Material','Roof Style','Solar Panel', 'Tree Overhang', 'Swimming Pool']
+item_2_label_lst = [
+    {'Fair':0, 'Good':1, 'Poor':2,'Damaged':3},
+    {'Metal':0, 'Poly':1, 'Shingle':2, 'Tile':3,'Ballasted':4,'Asphalt':5},
+    {'Flat':0, 'Gabled':1, 'Hip':2, 'Mixed':3},
+    {'No':0,'Yes':1},
+    {'Low':0, 'Medium':1,'High':2, 'No':3},
+    {'No':0, 'Yes':1,'Screened':2}]
+label_2_item_lst = [
+    {0: 'Fair', 1: 'Good', 2: 'Poor', 3:'Damaged'},
+    {0: 'Metal', 1: 'Poly', 2: 'Shingle', 3: 'Tile', 4: 'Ballasted', 5:'Asphalt'},
+    {0: 'Flat', 1: 'Gabled', 2: 'Hip', 3: 'Mixed'},
+    {0: 'No', 1:'Yes'},
+    {0: 'Low', 1: 'Medium', 2:'High', 3: 'No'},
+    {0: 'No', 1: 'Yes', 2:'Screened'}]
 def cross_entropy_loss_embedded(list_pred:List, list_y:List) -> float:
     loss_fn = torch.nn.CrossEntropyLoss()
     total_loss = 0
