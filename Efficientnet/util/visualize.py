@@ -63,7 +63,7 @@ def plot_loss_curves(results: Dict[str, List[float]]):
     plt.legend()
     plt.savefig("results/loss_curves.png");
     
-def plot_test_results(test_samples,test_data_custom:):
+def plot_test_results(test_labels,pred_classes,test_samples,test_data_custom):
   # Plot predictions
   plt.figure(figsize=(9, 9))
   plt.suptitle(f'Test results: Output Format:\n{attribs_m}')
@@ -91,9 +91,9 @@ def plot_test_results(test_samples,test_data_custom:):
     else:
         plt.title(title_text, fontsize=6, c="r") # red text if wrong
     plt.axis(False)
-  #plt.savefig("results/test_results.png");
+  plt.savefig("results/test_results.png");
 
-def plot_cm(cm:List, class_names:List(str),cls:str, ax):
+def plot_cm(cm:List, class_names:List,cls:str, ax):
     im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
     # Threshold for determining text color
     text_color_threshold = cm.max() / 2.  
@@ -111,8 +111,8 @@ def plot_cm(cm:List, class_names:List(str),cls:str, ax):
            ylabel='True label',
            xlabel='Predicted label');
     
-def plot_confusion_matrices(y_pred_tensors:List(List),targets_tensors:List(List),
-                            attribs:List(str) = attribs_m, item_2_label_lst:List(Dict)=item_2_label_lst):
+def plot_confusion_matrices(y_pred_tensors:List,targets_tensors:List,
+                            attribs:List = attribs_m, item_2_label_lst:List=item_2_label_lst):
   nrows,ncols = 2,3
   [y_pred_tensor_c,y_pred_tensor_m,y_pred_tensor_y,
    y_pred_tensor_s,y_pred_tensor_t,y_pred_tensor_p] = y_pred_tensors
@@ -151,4 +151,4 @@ def plot_confusion_matrices(y_pred_tensors:List(List),targets_tensors:List(List)
     plot_cm(conf_mat, class_names,cls, ax) 
   plt.tight_layout()
   plt.show()
-  #plt.savefig("results/cm_me.png");
+  plt.savefig("results/cm_me.png");
