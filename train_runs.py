@@ -16,18 +16,24 @@ from multimodel_effnet.Efficientnet.util.dataset import display_random_images,Cu
 from multimodel_effnet.Efficientnet.util.metrics_utils import cross_entropy_loss_embedded,accuracy_embedded
 from multimodel_effnet.Efficientnet.util.train_utils import train
 from multimodel_effnet.Efficientnet.util.utils import save_model
-from multimodel_effnet.Efficientnet.util.visualize import plot_loss_curves
+from multimodel_effnet.Efficientnet.util.visualize import plot_loss_curves,plot_test_results,plot_confusion_matrices
 
+Gdrive = False # IF you want to save data of images keep true
+folder_path = '/content/drive/MyDrive/' if Gdrive else '/content/'
+weights_Dir = Path('/content/drive/MyDrive/Colab_zip/GroundingDINO/weights')
+weights_Dir.mkdir(parents=True, exist_ok=True)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 #torch.set_default_device(device)
 print("device: ",device)
+
 base_path = Path(folder_path)
-#csv_path = base_path/'multimodel_effnet'/'data'/ csv_name
-train_csv_path = base_path/'multimodel_effnet'/'data'/ test_csv_name
-test_csv_path = base_path/'multimodel_effnet'/'data'/ test_csv_name
+csv_path = base_path/'multimodel_effnet'/'data'/ 'Twia_with_id_new_balanced.csv'
+train_csv_path = base_path/'multimodel_effnet'/'data'/ 'Twia_with_id_new_balanced_train.csv'
+test_csv_path = base_path/'multimodel_effnet'/'data'/ 'Twia_with_id_new_balanced_test.csv'
 image_directory = '/content/multimodel_effnet/data/Datasets2'
 weights_Dir = Path('/content/drive/MyDrive/Colab_zip/multimodel_effnet/weights')
 weights_Dir.mkdir(parents=True, exist_ok=True)
+df = pd.read_csv(csv_path)
 attribs_m = ['Roof Condition', 'Roof Material','Roof Style','Solar Panel', 'Tree Overhang', 'Swimming Pool']
 item_2_label_lst = [
     {'Fair':0, 'Good':1, 'Poor':2,'Damaged':3},
@@ -59,8 +65,8 @@ train_transforms = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.RandomHorizontalFlip(p=0.5),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225])
+    '''transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225])'''
 ])
 
 # Don't augment test data, only reshape
@@ -68,8 +74,8 @@ test_transforms = transforms.Compose([
     transforms.CenterCrop(768),
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225]),
+    '''transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225]),'''
 ])
 train_data_custom = CustomImageDataset(annotations_file=train_csv_path,
                                       img_dir=image_directory,
@@ -104,7 +110,7 @@ test_dataloader = DataLoader(
   )
 
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
+'''
 result = train(model=model,
       train_dataloader=train_dataloader,
       test_dataloader=test_dataloader,
@@ -112,7 +118,7 @@ result = train(model=model,
       loss_fn=cross_entropy_loss_embedded,
       acc_fn= accuracy_embedded,
       epochs=5,
-      device=device)
+      device=device)'''
 
 if __name__=="__main__":
   result = train(model=model,
@@ -123,5 +129,4 @@ if __name__=="__main__":
       acc_fn= accuracy_embedded,
       epochs=5,
       device=device)
-  return result
-
+  result
