@@ -119,6 +119,7 @@ class WeightedSampler(Sampler):
             freq_ratio = max_count / min_count  
             class_weights = {}
             for cls, count in zip(all_class_label,all_class_counts):
+              #(5.0/len(all_class_label))*
               class_weights[cls] = (freq_ratio / count)**self.power
             self.dict_att_wgts[att] = class_weights
           weights = []
