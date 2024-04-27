@@ -8,7 +8,7 @@ from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
 from torchvision.models import efficientnet_b0,EfficientNet_B0_Weights
 from multimodel_effnet.Efficientnet.model import multimodel_effnet_arc
-from multimodel_effnet.Efficientnet.util.dataset import display_random_images,CustomImageDataset
+from multimodel_effnet.Efficientnet.util.dataset import CustomImageDataset
 from multimodel_effnet.Efficientnet.util.metrics_utils import calculate_ConfusionMatrices
 from multimodel_effnet.Efficientnet.util.visualize import plot_confusion_matrices
 
@@ -182,6 +182,3 @@ if __name__ == '__main__':
   targets_tensors,y_pred_tensors = model_test( test_dataloader = test_dataloader, model = model,latest_weigths=latest_weigths, device = device)
   calculate_ConfusionMatrices(y_pred_tensors,targets_tensors)
   plot_confusion_matrices(y_pred_tensors,targets_tensors)
-
-
-
