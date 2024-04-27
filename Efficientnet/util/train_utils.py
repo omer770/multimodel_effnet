@@ -29,7 +29,8 @@ def train_step(model: torch.nn.Module,
                loss_fn: torch.nn.Module,
                acc_fn: torch.nn.Module,
                optimizer: torch.optim.Optimizer,
-               device: torch.device) -> Tuple[float, float]:
+               device: torch.device,
+              verbose: int = 0) -> Tuple[float, float]:
 
     # Put model in train mode
     model.to(device)
@@ -68,7 +69,8 @@ def train_step(model: torch.nn.Module,
         # Calculate and accumulate accuracy metric across all batches
         acc = acc_fn([y_pred_c,y_pred_m,y_pred_y,y_pred_s,y_pred_t,y_pred_p], [y_c,y_m,y_y,y_s,y_t,y_p])
         train_acc += acc
-        print(f"Train - batch: {batch}, X: {X.shape}, y: {len(y_c)},...,{len(y_m)} Loss: {loss:.2f}, Accuracy: {acc:.2f} ")
+        if verbose ==1:
+          print(f"Train - batch: {batch}, X: {X.shape}, y: {len(y_c)},...,{len(y_m)} Loss: {loss:.2f}, Accuracy: {acc:.2f} ")
     # Adjust metrics to get average loss and accuracy per batch
     train_loss = train_loss / len(dataloader)
     train_acc = train_acc / len(dataloader)
@@ -79,7 +81,8 @@ def test_step(model: torch.nn.Module,
               dataloader: torch.utils.data.DataLoader,
               loss_fn: torch.nn.Module,
               acc_fn: torch.nn.Module,
-              device: torch.device) -> Tuple[float, float]:
+              device: torch.device,
+             verbose:int = 0) -> Tuple[float, float]:
 
     # Put model in eval mode
     model.eval()
@@ -106,7 +109,8 @@ def test_step(model: torch.nn.Module,
             acc= acc_fn([test_pred_c,test_pred_m,test_pred_y,test_pred_s,test_pred_t,test_pred_p], [y_c,y_m,y_y,y_s,y_t,y_p])
             # Calculate and accumulate accuracy
             test_acc += acc
-            print(f"Test - batch: {batch}, X: {X.shape}, y: {len(y_c)},...,{len(y_m)} Loss: {loss:.2f}, Accuracy: {acc:.2f} ")
+            if verbose ==1:
+              print(f"Test - batch: {batch}, X: {X.shape}, y: {len(y_c)},...,{len(y_m)} Loss: {loss:.2f}, Accuracy: {acc:.2f} ")
     # Adjust metrics to get average loss and accuracy per batch
 
     test_loss = test_loss / len(dataloader)
@@ -124,7 +128,8 @@ def train(model: torch.nn.Module,
           save_path:str,
           device: torch.device,
           latest_weigths:str = None,
-          save_epoch:int=5) -> Dict[str, List]:
+          save_epoch:int=5
+         verbose:int = 0) -> Dict[str, List]:
 
     # Create empty results dictionary
     results = {"train_loss": [],
@@ -149,12 +154,14 @@ def train(model: torch.nn.Module,
                                           loss_fn=loss_fn,
                                           acc_fn= acc_fn,
                                           optimizer=optimizer,
-                                          device=device)
+                                          device=device,
+                                          verbose = verbose)
         test_loss, test_acc = test_step(model=model,
           dataloader=test_dataloader,
           loss_fn=loss_fn,
           acc_fn = acc_fn,
-          device=device)
+          device=device,
+          verbose = verbose)
         clear_output(wait=True)
         # Print out what's happening
         print(
