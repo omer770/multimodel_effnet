@@ -5,6 +5,7 @@ import random
 import pandas as pd
 from PIL import Image
 import matplotlib.pyplot as plt
+from torch.utils.data import Sampler
 from typing  import  Tuple, Dict, List
 
 def create_balanced_df(df,cls,k):
@@ -91,6 +92,47 @@ class CustomImageDataset(torch.utils.data.dataset.Dataset):
         decoded_labels.append(decoded_label)
 
     return decoded_labels
+class WeightedSampler(Sampler):
+    def __init__(self, dataset, weights_strategy='image-level',power=1):
+        self.dataset = dataset
+        self.weights_strategy = weights_strategy
+        self.power = power
+        self.indices = list(range(len(dataset)))
+        self.weights = self.calculate_weights(strategy=weights_strategy)
+          
+    def __len__(self):
+        return len(self.dataset)
 
+    def __iter__(self):
+      #print("Sampled Indices:", random.choices(self.indices, weights=self.weights, k=len(self.dataset), replace=True))  
+      return iter(random.choices(self.indices, weights=self.weights, k=len(self.dataset)))
+
+    def calculate_weights(self, strategy='class-level'):
+        if strategy == 'image-level':
+          self.dict_att_wgts = {}
+          for att in self.dataset.attribs:
+            all_labels_for_attribute = self.dataset.label_df[att] 
+            all_class_label = np.unique(all_labels_for_attribute, return_counts=True)[0]
+            all_class_counts = np.unique(all_labels_for_attribute, return_counts=True)[1]
+            max_count = all_class_counts.max()
+            min_count = all_class_counts.min()
+            freq_ratio = max_count / min_count  
+            class_weights = {}
+            for cls, count in zip(all_class_label,all_class_counts):
+              class_weights[cls] = (freq_ratio / count)**self.power
+            self.dict_att_wgts[att] = class_weights
+          weights = []
+          for idx in self.indices:
+              image_level_weight = 0
+              label_val = self.dataset.label_df.loc[idx, self.dataset.attribs]
+              for att in self.dataset.attribs:
+                class_weight = self.dict_att_wgts[att][label_val[att]]
+                image_level_weight += class_weight
+              print(f"{idx}-{self.dataset.label_df.loc[idx,'Image_ID']}:{image_level_weight}") 
+              weights.append(image_level_weight)
+        else:
+            raise ValueError(f"Invalid weights strategy: {strategy}")
+        print("weights",weights)
+        return weights
 if __name__ == "__main__":
   pass
