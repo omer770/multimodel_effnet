@@ -129,11 +129,11 @@ class WeightedSampler(Sampler):
               for att in self.dataset.attribs:
                 class_weight = self.dict_att_wgts[att][label_val[att]]
                 image_level_weight += class_weight
-              print(f"{idx}-{self.dataset.label_df.loc[idx,'Image_ID']}:{image_level_weight}") 
+              #print(f"{idx}-{self.dataset.label_df.loc[idx,'Image_ID']}:{image_level_weight}") 
               weights.append(image_level_weight)
         else:
             raise ValueError(f"Invalid weights strategy: {strategy}")
-        print("weights",weights)
+        #print("weights",weights)
         return weights
 if __name__ == "__main__":
   pass
