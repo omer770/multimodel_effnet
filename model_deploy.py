@@ -27,12 +27,51 @@ label_2_item_lst = [
     {0: 'No', 1:'Yes'},
     {0: 'Low', 1: 'Medium', 2:'High', 3: 'No'},
     {0: 'No', 1: 'Yes', 2:'Screened'}]
+suggestions_dict = {
+    "Roof Condition": {
+        "Fair": "Your roof is in fair condition. While the roof currently functional, consider these actions to prolong its lifespan.Schedule a professional inspection, perform proactive maintenance, and plan for future replacement",
+        "Good": "The roof is in good condition. Regular inspections and maintenance will help ensure its longevity",
+        "Poor": "The roof shows signs of patch or wear and tear or rust. Consider a professional roof inspection to determine if repairs or replacement are necessary.The roof requires an immediate attention",
+        "Damaged": "The roof has sustained damage. A thorough inspection and likely repairs are needed to prevent further deterioration"
+    },
+    "Roof Material": {
+        "Metal": "Metal roofs are known for their durability and longevity. Here are some things to keep in mind when having metal roofs: regular maintenance, potential sound dampening measures, and suitability for your specific climate.Metal roof is a good choice for barn but if it is for Residential stucture,switching to Shingle or Tile is a better option",
+        "Poly": "Poly roofs are a less common option.These are common for Commercial buildings. For Poly roofs, its important to research their durability, maintenance needs, and suitability for your climate",
+        "Shingle": "Shingle roofs are a popular choice, offering a balance of affordability and durability. Make sure to choose shingles appropriate for your area’s weather conditions",
+        "Tile": "Tile roofs are known for their longevity and beauty but can be more expensive. Tile roofs are great chioce for warmer climates", 
+        "Ballasted": "Ballasted roofs are typically used on flat commercial roofs. Ballasted roof consist of layers of gravel and asphalt for protection",
+        "Asphalt": "Asphalt is often used in roll roofing or as a base material for shingles. Asphalt is affordable but less durable than other options"
+    },
+    "Roof Style": {
+        "Flat": "Flat roofs are more common on commercial buildings. Ensure proper drainage and regular inspections to prevent water ponding issues",
+        "Gabled": "A classic and simple roof design with two sloping sides. Gabled roofs offer good water shedding capabilities",
+        "Hip": "Hip roofs feature slopes on all four sides. They provide good wind resistance and stability",
+        "Mixed": "Mixed roof styles combine elements of different styles. Mixed roof can be more complex, so it’s important to work with an experienced roofer" 
+    },
+    "Solar Panel": {
+        "No": "If you are considering solar panels in the future, Give your installation requirements.We offer SOTA solar design installations.Using AI we predict which facets have more exposer to sunlight and provide optimal layout for installing solar panals",
+        "Solar_Panel-Yes": "Ensure your roof is in good structural condition to support the weight of solar panels"
+      },
+    "Tree Overhang": {
+        "Low": "Minor tree overhang may not be a significant concern. Monitor the roof for accumulating debris",
+        "Medium": "Medium tree overhang can shade the roof and lead to moisture issues. Consider trimming branches",
+        "High": "Significant tree overhang poses a risk of falling branches and debris. Have the trees professionally evaluated and trimmed as needed", 
+        "No": "No tree overhang means better sunlight exposure and potentially less debris accumulation"
+      },
+    "Swimming Pool": {
+        "No": "No swimming pool present means less concern about the roof being exposed to excess moisture",
+        "Yes": "A swimming pool near the structure can increase humidity levels. Be observant of potential moisture-related issues on the roof",
+        "Screened": "A screened pool reduces the amount of direct water and debris exposure to the roof.Its a good choice having a Screened pool"
+    }
+}
+
+classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
 def pred_label_2_classes (pred_label,label_2_item_lst=label_2_item_lst):
   pred_class = [label_2_item_lst[i][label] for i,label in enumerate(pred_label)]
   return pred_class
 
-def pred_logits_to_labels(pred_logits):
+def pred_logits_to_labels(pred_logits,get_conf:bool = False):
   pred_c,pred_m,pred_y,pred_s,pred_t,pred_p = pred_logits
   conf_c = torch.softmax(pred_c, dim=1)
   conf_m = torch.softmax(pred_m, dim=1)
@@ -45,9 +84,15 @@ def pred_logits_to_labels(pred_logits):
   pred_label_y = conf_y.argmax(dim=1).cpu().item()
   pred_label_s = conf_s.argmax(dim=1).cpu().item()
   pred_label_t = conf_t.argmax(dim=1).cpu().item()
-  pred_label_p = conf_p.argmax(dim=1).cpu().item()
+  pred_label_p = conf_p.argmax(dim=1).cpu().item() 
   pred_label = [pred_label_c,pred_label_m,pred_label_y,pred_label_s,pred_label_t,pred_label_p]
-  return pred_label
+  if get_conf:
+    pred_conf = [round(conf_c.max().cpu().item(),2),round(conf_m.max().cpu().item(),2),
+                        round(conf_y.max().cpu().item(),2),round(conf_s.max().cpu().item(),2),
+                        round(conf_t.max().cpu().item(),2),round(conf_p.max().cpu().item(),2)]
+    return pred_label , pred_conf
+  else: return pred_label
+
 
 def pred_and_store(model: torch.nn.Module,
                    transform: torchvision.transforms, 
@@ -85,16 +130,8 @@ def pred_and_store(model: torch.nn.Module,
         
         # 10. Get prediction probability, predicition label and prediction class
         with torch.inference_mode():
-            test_pred_c,test_pred_m,test_pred_y,test_pred_s,test_pred_t,test_pred_p = model(transformed_image) # perform inference on target sample 
-            pred_label_c = torch.softmax(test_pred_c, dim=1).argmax(dim=1).cpu().item()
-            pred_label_m = torch.softmax(test_pred_m, dim=1).argmax(dim=1).cpu().item()
-            pred_label_y = torch.softmax(test_pred_y, dim=1).argmax(dim=1).cpu().item()
-            pred_label_s = torch.softmax(test_pred_s, dim=1).argmax(dim=1).cpu().item()
-            pred_label_t = torch.softmax(test_pred_t, dim=1).argmax(dim=1).cpu().item()
-            pred_label_p = torch.softmax(test_pred_p, dim=1).argmax(dim=1).cpu().item()
-
-            pred_label = [pred_label_c,pred_label_m,pred_label_y,pred_label_s,pred_label_t,pred_label_p]
-
+            pred_logits = model(transformed_image) # perform inference on target sample 
+            pred_label = pred_logits_to_labels(pred_logits)
             pred_classes = pred_label_2_classes(pred_label) # hardcode prediction class to be on CPU
 
             # 11. Make sure things in the dictionary are on CPU (required for inspecting predictions later on) 
@@ -119,37 +156,22 @@ def pred_and_store(model: torch.nn.Module,
     # 15. Return list of prediction dictionaries
     return pred_list
 
-def predict(img) -> Tuple[Dict, float]:
+def predict(img,model, transform) -> Tuple[Dict, float]:
     """Transforms and performs a prediction on img and returns prediction and time taken.
     """
-    
-    # Transform the target image and add a batch dimension
-    img = test_transforms(img).unsqueeze(0)
+    if transform:
+      # Transform the target image and add a batch dimension
+      img = transform(img)
+    img = img.unsqueeze(0)
     
     # Put model into evaluation mode and turn on inference mode
     model.eval()
     with torch.inference_mode():
         # Pass the transformed image through the model and turn the prediction logits into prediction probabilities
-        pred_c,pred_m,pred_y,pred_s,pred_t,pred_p = model(img)
-        conf_c = torch.softmax(pred_c, dim=1)
-        conf_m = torch.softmax(pred_m, dim=1)
-        conf_y = torch.softmax(pred_y, dim=1)
-        conf_s = torch.softmax(pred_s, dim=1)
-        conf_t = torch.softmax(pred_t, dim=1)
-        conf_p = torch.softmax(pred_p, dim=1)
-        pred_label_c = conf_c.argmax(dim=1).cpu().item()
-        pred_label_m = conf_m.argmax(dim=1).cpu().item()
-        pred_label_y = conf_y.argmax(dim=1).cpu().item()
-        pred_label_s = conf_s.argmax(dim=1).cpu().item()
-        pred_label_t = conf_t.argmax(dim=1).cpu().item()
-        pred_label_p = conf_p.argmax(dim=1).cpu().item()
-
-        pred_label = [pred_label_c,pred_label_m,pred_label_y,pred_label_s,pred_label_t,pred_label_p]
-
-        pred_classes = pred_label_2_classes(pred_label)
-        conf_classes = [round(conf_c.max().cpu().item(),2),round(conf_m.max().cpu().item(),2),
-                        round(conf_y.max().cpu().item(),2),round(conf_s.max().cpu().item(),2),
-                        round(conf_t.max().cpu().item(),2),round(conf_p.max().cpu().item(),2)]
+        pred_logits = model(img)
+    pred_label,pred_conf = pred_logits_to_labels(pred_logits,get_conf = True)
+    pred_classes = pred_label_2_classes(pred_label)
+    conf_classes = pred_conf
     # Calculate the prediction time
     #pred_classes_dict = {att:(pred_classes[i],conf_classes[i]) for i,att in enumerate(attribs_m)}
     # Return the prediction dictionary and prediction time 
@@ -159,14 +181,16 @@ def predict(img) -> Tuple[Dict, float]:
       pred_dict_list.append(pred_dict)
     #print(pred_dict_list)
     return pred_dict_list[0],pred_dict_list[1],pred_dict_list[2],pred_dict_list[3],pred_dict_list[4],pred_dict_list[5]
-def generate_out_response(prompt, y_out, image_path, classifier,attribs=attribs_m):
+
+
+def generate_out_response(prompt, y_out, classifier,suggestions_dict=suggestions_dict,attribs=attribs_m):
     """Formats and prints the output of the combined model in a GenAI style, line by line"""
     original_text = prompt
     #prompt1 = input("prompts")
     candidate_labels = ['pool','condition', 'material', 'all', 'type','tree','roof','solar']
     out_dict ={attribs[at]:y_out[at] for at in range(len(attribs))}
     def clean_prompt(prompt):
-      replace_items = ['.','building','image','roof?','roof.']
+      replace_items = ['building','image','roof?','roof.','buliding.','.','analyze']
       prompt = prompt.lower()
       for r in replace_items:
         prompt = prompt.replace(r,'')
@@ -192,7 +216,6 @@ def generate_out_response(prompt, y_out, image_path, classifier,attribs=attribs_
     att_2_select = att_selector(result)
     output_lines = [
         f"Image Analysis Results:\n",
-        f"Image: {image_path}",
         f"User Input: \"{original_text}\"",
         f"Interpretation: ",
         #"It seems that the image strongly suggests the following:- "
@@ -200,28 +223,17 @@ def generate_out_response(prompt, y_out, image_path, classifier,attribs=attribs_
     for key, value in out_dict.items():
       if key in att_2_select:
         output_lines.append(f"  * The {key} is {value}.")
+    output_lines.append(f"\nSuggestions: ")
+    for key, value in out_dict.items():
+      if key in att_2_select:
+        suggestions_lists = suggestions_dict[key][value].split(".")
+        #suggestions_lists.remove('.')
+        for suggestions in suggestions_lists:
+          output_lines.append(f"  * {suggestions.strip()}.")
     output_stream = ''
     for line in output_lines:
-        output_stream += line+'\n'
-    return output_stream
-
-def multimodel_effnet_gr(image, text,model: torch.nn.Module, transform:torchvision.transforms,classifier: pipeline):
-    # Replace this with your actual image and text processing logic
-    #prompt1 = input("prompts")
-    img = image.convert('RGB')
-    img = transform(img).unsqueeze(0)
-    # Put model into evaluation mode and turn on inference mode
-    model.eval()
-    with torch.inference_mode():
-        # Pass the transformed image through the model and turn the prediction logits into prediction probabilities
-        pred_logits = model(img)
-
-    pred_label = pred_logits_to_labels(pred_logits)
-    pred_classes = pred_label_2_classes(pred_label)
-    #y_out = ['Fair','Shingle','Mixed','No','Low','No']
-    result = generate_out_response(prompt=text, y_out=pred_classes,classifier = classifier, image_path="Image.jpg")
-    return result
-
+        output_stream += line+'\n'    
+        
 if __name__ == '__main__':
     #article = "Created https://github.com/omer770/multimodel_effnet.git"
   example_list  = [['/content/multimodel_effnet/data/Datasets2/Image_22884_Metal_Gabled_Good.jpg'],
