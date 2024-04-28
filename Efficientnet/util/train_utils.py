@@ -128,7 +128,7 @@ def train(model: torch.nn.Module,
           save_path:str,
           device: torch.device,
           latest_weigths:str = None,
-          save_epoch:int=5
+          save_epoch:int=5,
          verbose:int = 0) -> Dict[str, List]:
 
     # Create empty results dictionary
