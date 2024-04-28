@@ -6,3 +6,4 @@ opencv-python
 torchinfo
 torcheval
 torchmetrics
+gradio
