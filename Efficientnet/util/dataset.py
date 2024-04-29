@@ -94,10 +94,11 @@ class CustomImageDataset(torch.utils.data.dataset.Dataset):
 
     return decoded_labels
 class WeightedSampler(Sampler):
-    def __init__(self, dataset, weights_strategy='image-level',power=1):
+    def __init__(self, dataset, weights_strategy='image-level',focus_class: str = 'Roof Condition' ,power=1):
         self.dataset = dataset
         self.weights_strategy = weights_strategy
         self.power = power
+        self.focus_class=focus_class
         self.indices = list(range(len(dataset)))
         self.weights = self.calculate_weights(strategy=weights_strategy)
           
@@ -109,32 +110,39 @@ class WeightedSampler(Sampler):
       return iter(random.choices(self.indices, weights=self.weights, k=len(self.dataset)))
 
     def calculate_weights(self, strategy='class-level'):
+        
+        self.dict_att_wgts = {}
+        for att in self.dataset.attribs:
+          all_labels_for_attribute = self.dataset.label_df[att] 
+          all_class_label = np.unique(all_labels_for_attribute, return_counts=True)[0]
+          all_class_counts = np.unique(all_labels_for_attribute, return_counts=True)[1]
+          max_count = all_class_counts.max()
+          min_count = all_class_counts.min()
+          freq_ratio = max_count / min_count  
+          class_weights = {}
+          for cls, count in zip(all_class_label,all_class_counts):
+            #(5.0/len(all_class_label))*
+            class_weights[cls] = (freq_ratio / count)**self.power
+          self.dict_att_wgts[att] = class_weights
+
+        weights = [] 
         if strategy == 'image-level':
-          self.dict_att_wgts = {}
-          for att in self.dataset.attribs:
-            all_labels_for_attribute = self.dataset.label_df[att] 
-            all_class_label = np.unique(all_labels_for_attribute, return_counts=True)[0]
-            all_class_counts = np.unique(all_labels_for_attribute, return_counts=True)[1]
-            max_count = all_class_counts.max()
-            min_count = all_class_counts.min()
-            freq_ratio = max_count / min_count  
-            class_weights = {}
-            for cls, count in zip(all_class_label,all_class_counts):
-              #(5.0/len(all_class_label))*
-              class_weights[cls] = (freq_ratio / count)**self.power
-            self.dict_att_wgts[att] = class_weights
-          weights = []
           for idx in self.indices:
-              image_level_weight = 0
-              label_val = self.dataset.label_df.loc[idx, self.dataset.attribs]
-              for att in self.dataset.attribs:
-                class_weight = self.dict_att_wgts[att][label_val[att]]
-                image_level_weight += class_weight
-              #print(f"{idx}-{self.dataset.label_df.loc[idx,'Image_ID']}:{image_level_weight}") 
-              weights.append(image_level_weight)
+            image_level_weight = 0
+            label_val = self.dataset.label_df.loc[idx, self.dataset.attribs]
+            for att in self.dataset.attribs:
+              class_weight = self.dict_att_wgts[att][label_val[att]]
+              image_level_weight += class_weight
+            #print(f"{idx}-{self.dataset.label_df.loc[idx,'Image_ID']}:{image_level_weight}") 
+            weights.append(image_level_weight)
+        elif strategy == 'class-level':
+          if self.focus_class not in self.dataset.attribs:
+            raise ValueError(f"Invalid class selected: {self.focus_class}")
+          for idx in self.indices:
+            label_val = self.dataset.label_df.loc[idx, self.dataset.attribs]
+            class_weight = self.dict_att_wgts[self.focus_class][label_val[self.focus_class]]
+            weights.append(class_weight)
         else:
             raise ValueError(f"Invalid weights strategy: {strategy}")
         #print("weights",weights)
         return weights
-if __name__ == "__main__":
-  pass
