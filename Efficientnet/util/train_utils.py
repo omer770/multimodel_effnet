@@ -28,7 +28,7 @@ def train_step(model: torch.nn.Module,
     train_loss = 0
     train_acc = 0
     # Loop through data loader data batches
-    if verbose == 1:print("\nTotal batches: ",len(dataloader))
+    
     for batch, (X, (y_c,y_m,y_y,y_s,y_t,y_p)) in enumerate(dataloader):
         # Send data to target device
         #print(f"Train - batch: {batch}, X: {X.shape}, y: {len(y_c)},...,{len(y_m)} ")
@@ -125,6 +125,7 @@ def train(model: torch.nn.Module,
                "test_loss": [],
                "test_acc": []
     }
+    if verbose == 1:print("Total batches: ",len(dataloader))
     if latest_weigths:
       print("choosen weights: ",latest_weigths)
       times = str(int(latest_weigths.split('_')[-2])+1).zfill(2)
