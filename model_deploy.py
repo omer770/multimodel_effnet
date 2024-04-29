@@ -190,7 +190,7 @@ def generate_out_response(prompt, y_out, classifier,suggestions_dict=suggestions
     candidate_labels = ['pool','condition', 'material', 'all', 'type','tree','roof','solar']
     out_dict ={attribs[at]:y_out[at] for at in range(len(attribs))}
     def clean_prompt(prompt):
-      replace_items = ['building','image','roof?','roof.','buliding.','.','analyze']
+      replace_items = ['building','image','roof?','roof.','buliding.','.','property','analyze']
       prompt = prompt.lower()
       for r in replace_items:
         prompt = prompt.replace(r,'')
