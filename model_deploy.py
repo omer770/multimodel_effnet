@@ -242,9 +242,12 @@ def generate_out_response(prompt, y_out, classifier=classifier,suggestions_dict=
         
 if __name__ == '__main__':
     #article = "Created https://github.com/omer770/multimodel_effnet.git"
-  example_list  = [['/content/multimodel_effnet/data/Datasets2/Image_22884_Metal_Gabled_Good.jpg'],
-                    ['/content/multimodel_effnet/data/Datasets2/Image_31333_Asphalt_Flat_Fair.jpg'],
-                    ['/content/multimodel_effnet/data/Datasets2/Image_31078_Poly_Flat_Fair.jpg']]
+  example_list  = [['/content/multimodel_effnet/data/Datasets2/Image_10766_Shingle_Mixed_Fair.jpg'],
+                 ['/content/multimodel_effnet/data/Datasets2/Image_1277_Tile_Mixed_Damaged.jpg'],
+                 ['/content/multimodel_effnet/data/Datasets2/Image_6229_Metal_Gabled_Poor.jpg'],
+                 ['/content/multimodel_effnet/data/Datasets2/Image_27753_Tile_Mixed_Fair.jpg'],
+                 ['/content/multimodel_effnet/data/Datasets2/Image_25246_Metal_Gabled_Good.jpg']]
+
   # Create the Gradio demo
   demo = gr.Interface(
       fn=predict,
