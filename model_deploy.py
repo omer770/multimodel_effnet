@@ -64,7 +64,13 @@ suggestions_dict = {
         "Screened": "A screened pool reduces the amount of direct water and debris exposure to the roof.Its a good choice having a Screened pool"
     }
 }
-
+transform = torchvision.transforms.Compose([
+    torchvision.transforms.CenterCrop(768),
+    torchvision.transforms.Resize((224, 224)),
+    torchvision.transforms.ToTensor(),
+    #torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         #std=[0.229, 0.224, 0.225]),
+])
 classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
 def pred_label_2_classes (pred_label,label_2_item_lst=label_2_item_lst):
@@ -156,12 +162,11 @@ def pred_and_store(model: torch.nn.Module,
     # 15. Return list of prediction dictionaries
     return pred_list
 
-def predict(img,model, transform) -> Tuple[Dict, float]:
+def predict(img,model, transform = transform) -> Tuple[Dict, float]:
     """Transforms and performs a prediction on img and returns prediction and time taken.
     """
-    if transform:
       # Transform the target image and add a batch dimension
-      img = transform(img)
+    img = transform(img)
     img = img.unsqueeze(0)
     
     # Put model into evaluation mode and turn on inference mode
@@ -183,7 +188,7 @@ def predict(img,model, transform) -> Tuple[Dict, float]:
     return pred_dict_list[0],pred_dict_list[1],pred_dict_list[2],pred_dict_list[3],pred_dict_list[4],pred_dict_list[5]
 
 
-def generate_out_response(prompt, y_out, classifier,suggestions_dict=suggestions_dict,attribs=attribs_m):
+def generate_out_response(prompt, y_out, classifier=classifier,suggestions_dict=suggestions_dict,attribs=attribs_m):
     """Formats and prints the output of the combined model in a GenAI style, line by line"""
     original_text = prompt
     #prompt1 = input("prompts")
@@ -232,7 +237,8 @@ def generate_out_response(prompt, y_out, classifier,suggestions_dict=suggestions
           output_lines.append(f"  * {suggestions.strip()}.")
     output_stream = ''
     for line in output_lines:
-        output_stream += line+'\n'    
+        output_stream += line+'\n' 
+    return output_stream
         
 if __name__ == '__main__':
     #article = "Created https://github.com/omer770/multimodel_effnet.git"
