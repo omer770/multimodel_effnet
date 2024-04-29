@@ -1,5 +1,5 @@
 import torch
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from pathlib import Path
 from typing  import  Tuple, Dict, List
 from IPython.display import clear_output
@@ -9,18 +9,6 @@ weights_Dir = Path('/content/drive/MyDrive/Colab_zip/multimodel_effnet/weights')
 weights_Dir.mkdir(parents=True, exist_ok=True)
 
 
-'''
-filePaths = [file for file in weights_Dir.iterdir() if file.name.startswith('me_model_weights')]
-try:
-  latest_weigths = str(filePaths[-1])
-  #model.load_state_dict(torch.load(latest_weigths,map_location= device))
-  print("choosen weights: ",latest_weigths)
-  times = str(int(latest_weigths.split('_')[-2])+1).zfill(2)
-except:
-  latest_weigths= None
-  print("choosen weights: ",latest_weigths)
-  times = '00'
-'''
 # Dataset paths
 #images_files=sorted(os.listdir("data/images"))
 
@@ -162,7 +150,7 @@ def train(model: torch.nn.Module,
           acc_fn = acc_fn,
           device=device,
           verbose = verbose)
-        clear_output(wait=True)
+        #clear_output(wait=True)
         # Print out what's happening
         print(
           f"Epoch: {epoch+1} | "
