@@ -20,8 +20,6 @@ from multimodel_effnet.Efficientnet.util.visualize import plot_loss_curves,plot_
 
 Gdrive = False # IF you want to save data of images keep true
 folder_path = '/content/drive/MyDrive/' if Gdrive else '/content/'
-weights_Dir = Path('/content/drive/MyDrive/Colab_zip/GroundingDINO/weights')
-weights_Dir.mkdir(parents=True, exist_ok=True)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 #torch.set_default_device(device)
 print("device: ",device)
